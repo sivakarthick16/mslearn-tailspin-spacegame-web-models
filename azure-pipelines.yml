@@ -2,9 +2,21 @@ pool: EMRSTGSERVER
 
 variables:
   buildConfiguration: 'Release'
-  dotnetSdkVersion: '6.x'
+  wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
+  dotnetSdkVersion: '8.0.x'
+  http_proxy: http://eproxy-emaar.goskope.com:8081
+  https_proxy: http://eproxy-emaar.goskope.com:8081
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
 steps:
+- powershell: |
+    [Environment]::SetEnvironmentVariable("HTTP_PROXY", "http://eproxy-emaar.goskope.com:8081", "Process")
+    [Environment]::SetEnvironmentVariable("HTTPS_PROXY", "http://eproxy-emaar.goskope.com:8081", "Process")
+    [Environment]::SetEnvironmentVariable("http_proxy", "http://eproxy-emaar.goskope.com:8081", "Process")
+    [Environment]::SetEnvironmentVariable("https_proxy", "http://eproxy-emaar.goskope.com:8081", "Process")
+    [Environment]::SetEnvironmentVariable("NODE_TLS_REJECT_UNAUTHORIZED", "0", "Process")
+  displayName: "Set proxy environment variables via powershell"
+  
 - task: UseDotNet@2
   displayName: 'Use .NET SDK $(dotnetSdkVersion)'
   inputs:
