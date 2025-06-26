@@ -16,7 +16,7 @@ steps:
     [Environment]::SetEnvironmentVariable("https_proxy", "http://eproxy-emaar.goskope.com:8081", "Process")
     [Environment]::SetEnvironmentVariable("NODE_TLS_REJECT_UNAUTHORIZED", "0", "Process")
   displayName: "Set proxy environment variables via powershell"
-  
+
 - task: UseDotNet@2
   displayName: 'Use .NET SDK $(dotnetSdkVersion)'
   inputs:
@@ -52,4 +52,8 @@ steps:
     command: push
     feedPublish: '$(System.TeamProject)/Tailspin.SpaceGame.Web.Models'
     allowPackageConflicts: true
+  env:
+    HTTP_PROXY: $(HTTP_PROXY)
+    HTTPS_PROXY: $(HTTPS_PROXY)
+    NODE_TLS_REJECT_UNAUTHORIZED: $(NODE_TLS_REJECT_UNAUTHORIZED)
   condition: succeeded()
