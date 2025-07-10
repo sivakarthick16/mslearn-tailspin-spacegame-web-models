@@ -1,3 +1,6 @@
+trigger:
+- '*'
+
 pool: EMRSTGSERVER
 
 variables:
@@ -18,9 +21,26 @@ steps:
   displayName: "Set proxy environment variables via powershell"
 
 - task: UseDotNet@2
-  displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+  displayName: 'Use .NET SDK 8.0.x'
   inputs:
-    version: '$(dotnetSdkVersion)'
+    packageType: sdk
+    version: '8.0.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+- task: Npm@1
+  displayName: 'Run npm install'
+  inputs:
+    verbose: false
+
+- script: './node_modules/.bin/sass $(wwwrootDir):$(wwwrootDir)'
+  displayName: 'Compile Sass assets'
+
+- task: gulp@1
+  displayName: 'Run gulp tasks'
+
+- script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
+  displayName: 'Write build info'
+  workingDirectory: Tailspin.SpaceGame.Web/wwwroot
 
 - task: DotNetCoreCLI@2
   displayName: 'Restore project dependencies'
@@ -29,31 +49,8 @@ steps:
     projects: '**/*.csproj'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Build the project - $(buildConfiguration)'
+  displayName: 'Build the project - Release'
   inputs:
     command: 'build'
-    arguments: '--no-restore --configuration $(buildConfiguration)'
+    arguments: '--no-restore --configuration Release'
     projects: '**/*.csproj'
-
-- task: DotNetCoreCLI@2
-  displayName: 'Pack the project - $(buildConfiguration)'
-  inputs:
-    command: 'pack'
-    projects: '**/*.csproj'
-    arguments: '--no-build --configuration $(buildConfiguration)'
-    versioningScheme: byPrereleaseNumber
-    majorVersion: '1'
-    minorVersion: '0'
-    patchVersion: '0'
- 
-- task: NuGetCommand@2
-  displayName: 'Publish NuGet package'
-  inputs:
-    command: push
-    feedPublish: '$(System.TeamProject)/Tailspin.SpaceGame.Web.Models'
-    allowPackageConflicts: true
-  env:
-    HTTP_PROXY: $(HTTP_PROXY)
-    HTTPS_PROXY: $(HTTPS_PROXY)
-    NODE_TLS_REJECT_UNAUTHORIZED: $(NODE_TLS_REJECT_UNAUTHORIZED)
-  condition: succeeded()
